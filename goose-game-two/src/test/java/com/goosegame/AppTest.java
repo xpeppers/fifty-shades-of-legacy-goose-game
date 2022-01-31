@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AppTest {
 
@@ -26,6 +27,49 @@ public class AppTest {
                 .post("/players")
                 .then()
                 .statusCode(400);
+    }
+
+    @Test
+    void play_complete_game() {
+        String ivanId = addPlayer("Ivan", "slow duck");
+        String davideId = addPlayer("Davide", "smart duck");
+        String edoId = addPlayer("Edo", "cool duck");
+        String kentId = addPlayer("Kent", "wise duck");
+
+        int position;
+        while(true) {
+            position = movePlayer(ivanId);
+            if (isWinningPosition(position))
+                break;
+
+            position = movePlayer(davideId);
+            if (isWinningPosition(position))
+                break;
+
+            position = movePlayer(edoId);
+            if (isWinningPosition(position))
+                break;
+
+            position = movePlayer(kentId);
+            if (isWinningPosition(position))
+                break;
+        }
+
+        assertEquals(63, position);
+    }
+
+    private boolean isWinningPosition(int position) {
+        return position == 63;
+    }
+
+    private Integer movePlayer(String ivanId) {
+        return given()
+                .when()
+                .post("/players/" + ivanId + "/roll")
+                .then()
+                .statusCode(200)
+                .and()
+                .extract().path("position");
     }
 
     @Test
