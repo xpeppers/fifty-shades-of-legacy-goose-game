@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class App {
+    public static final int MAX_PLAYERS = 4;
+    public static final String APPLICATION_JSON = "application/json";
     private static Logger logger = LoggerFactory.getLogger(App.class);
 
     private final DiceRollerService diceRollerService = new DiceRollerService();
@@ -24,29 +26,41 @@ public class App {
     public String createPlayer(Request req, Response res) {
         JSONObject json = new Utils().fromJson(req.body());
         Player wannabePlayer = new Player(json);
+
         if (exist(wannabePlayer)) {
-            // player name already taken
-            res.status(400);
-            res.type("application/json");
-            return "{\"error\": \"nickname already taken: " + wannabePlayer.getNickname() + "\"}";
+            return createResponsePlayerAlreadyExists(res, wannabePlayer);
         }
         if (moreThanFourPlayer()) {
-            // ...no! Too much players already in the game.
-            res.status(400);
-            res.type("application/json");
-            return "{\"error\": \"too many players already: " + printNames(players) + "\"}";
+            return createResponseMoreThanFourPlayers(res);
         }
+
         players.add(wannabePlayer);
-        if (players.size() == 4)
+        if (players.size() == MAX_PLAYERS)
             nextPlayer = players.getFirst();
 
         logger.info("{} joined the game!", wannabePlayer);
+        return createResponse(res, wannabePlayer);
+
+    }
+
+    private String createResponse(Response res, Player wannabePlayer) {
         res.status(201);
-        res.type("application/json");
+        res.type(APPLICATION_JSON);
         return "{\"id\": \"" + wannabePlayer.getUuid()
                 + "\", \"name\": \"" + wannabePlayer.getName()
                 + "\", \"nickname\": \"" + wannabePlayer.getNickname() + "\"}";
+    }
 
+    private String createResponseMoreThanFourPlayers(Response res) {
+        res.status(400);
+        res.type(APPLICATION_JSON);
+        return "{\"error\": \"too many players already: " + printNames(players) + "\"}";
+    }
+
+    private String createResponsePlayerAlreadyExists(Response res, Player wannabePlayer) {
+        res.status(400);
+        res.type(APPLICATION_JSON);
+        return "{\"error\": \"nickname already taken: " + wannabePlayer.getNickname() + "\"}";
     }
 
     private boolean exist(Player nickname) {
@@ -59,7 +73,7 @@ public class App {
     }
 
     public String roll(Request req, Response res) {
-        res.type("application/json");
+        res.type(APPLICATION_JSON);
         if (!moreThanFourPlayer()) {
             res.status(400);
             return "{\"error\": \"Game not started, waiting for more players\"}";
@@ -94,7 +108,7 @@ public class App {
     }
 
     private boolean moreThanFourPlayer() {
-        return players.size() >= 4;
+        return players.size() >= MAX_PLAYERS;
     }
 
     private String printNames(LinkedList<Player> players) {
