@@ -1,5 +1,8 @@
 package com.goosegame;
 
+import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +46,18 @@ public class AppTest {
         createPlayerRequest(STATUS_CODE_201, "{ \"name\": \"Piero\", \"nickname\": \"player4\"}");
 
         createPlayerRequest(STATUS_CODE_400, "{ \"name\": \"Ivan\", \"nickname\": \"player5\"}");
+    }
+
+    @Test
+    void returnGameNotStarted() {
+        String uuidPlayer=given().body(PLAYER_PAOLO_GOOSER)
+                .when()
+                .post(CREATE_PLAYER_ENDPOINT).body().path("uuid");
+        given()
+                .when()
+                .post("/players/"+uuidPlayer+"/roll")
+                .then()
+                .statusCode(400).body("error", Matchers.equalTo("Game not started, waiting for more players"));
     }
 
     private void createPlayerRequest(int statusCode201, String playerPaoloGooser) {
