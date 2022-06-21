@@ -39,7 +39,19 @@ class EndToEndTest {
                 when().request("POST", "/players").then().statusCode(201);
 
         with().body("{ \"name\": \"Paolo5\", \"nickname\": \"gooser5\"}").
-                when().request("POST", "/players").then().statusCode(400).assertThat().body("error", equalTo("too many players already: Paolo1, Paolo2, Paolo3, Paolo4"));
+                when().request("POST", "/players").then().statusCode(400)
+                .assertThat()
+                    .body("error", equalTo("too many players already: Paolo1, Paolo2, Paolo3, Paolo4"));
+    }
+
+    @Test
+    public void should_dont_allow_two_players_with_some_nickname() {
+        with().body("{ \"name\": \"Paolo1\", \"nickname\": \"gooser1\"}").
+                when().request("POST", "/players").then().statusCode(201);
+        with().body("{ \"name\": \"Paolo1\", \"nickname\": \"gooser1\"}").
+                when().request("POST", "/players").then()
+                .statusCode(400).assertThat()
+                .body("error", equalTo("nickname already taken: gooser1"));
     }
 
 
