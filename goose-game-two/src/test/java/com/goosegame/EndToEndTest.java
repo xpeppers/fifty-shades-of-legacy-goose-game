@@ -11,12 +11,12 @@ class EndToEndTest {
 
     @BeforeEach
     public void setup() {
-        main.main(new String[]{});
+        Main.main(new String[]{});
     }
 
     @AfterEach
     public void stop() throws InterruptedException {
-        main.stop();
+        Main.stop();
     }
 
     @Test

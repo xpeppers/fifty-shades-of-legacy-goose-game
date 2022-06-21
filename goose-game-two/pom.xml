@@ -34,7 +34,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.goosegame.main</mainClass>
+                                    <mainClass>com.goosegame.Main</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

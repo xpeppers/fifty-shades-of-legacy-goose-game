@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class App {
@@ -27,26 +29,24 @@ public class App {
             res.status(400);
             res.type("application/json");
             return "{\"error\": \"nickname already taken: " + wannabePlayer.getNickname() + "\"}";
-        } else {
-            // check to see if we can add one more player...
-            if (!moreThanFourPlayer()) {
-                players.add(wannabePlayer);
-                if (players.size() == 4)
-                    nextPlayer = players.getFirst();
-
-                logger.info("{} joined the game!", wannabePlayer);
-                res.status(201);
-                res.type("application/json");
-                return "{\"id\": \"" + wannabePlayer.getUuid()
-                        + "\", \"name\": \"" + wannabePlayer.getName()
-                        + "\", \"nickname\": \"" + wannabePlayer.getNickname() + "\"}";
-            } else {
-                // ...no! Too much players already in the game.
-                res.status(400);
-                res.type("application/json");
-                return "{\"error\": \"too many players already: " + printNames(players) + "\"}";
-            }
         }
+        if (moreThanFourPlayer()) {
+            // ...no! Too much players already in the game.
+            res.status(400);
+            res.type("application/json");
+            return "{\"error\": \"too many players already: " + printNames(players) + "\"}";
+        }
+        players.add(wannabePlayer);
+        if (players.size() == 4)
+            nextPlayer = players.getFirst();
+
+        logger.info("{} joined the game!", wannabePlayer);
+        res.status(201);
+        res.type("application/json");
+        return "{\"id\": \"" + wannabePlayer.getUuid()
+                + "\", \"name\": \"" + wannabePlayer.getName()
+                + "\", \"nickname\": \"" + wannabePlayer.getNickname() + "\"}";
+
     }
 
     private boolean exist(Player nickname) {
@@ -72,12 +72,12 @@ public class App {
             // Does it still throw exception?
             try {
                 Player player = players.stream().filter(it -> it.getUuid().toString().equals(req.params("id"))).collect(Collectors.toList()).get(0);
-                if (!nextPlayer.equals(player)){
+                if (!nextPlayer.equals(player)) {
                     res.status(400);
                     return "{\"error\": \"Is not your turn " + player.getName() + "!\"}";
                 }
                 String movePlayer = movePlayer(player);
-                nextPlayer = players.get((players.indexOf(player) + 1 ) % players.size());
+                nextPlayer = players.get((players.indexOf(player) + 1) % players.size());
                 logger.info("next player is {}", nextPlayer);
 
                 res.status(200);
@@ -117,23 +117,22 @@ public class App {
         String message = String.format("%s moves from %s to %s. ", currentPlayer.getName(), cellName(startPosition), cellName(newPosition));
 
         Optional<Player> playerInPosition = players.stream().filter(p -> p.getPosition() == currentPlayer.getPosition() && !p.getUuid().equals(currentPlayer.getUuid())).findFirst();
-        if(playerInPosition.isPresent()){
+        if (playerInPosition.isPresent()) {
             playerInPosition.get().setPosition(startPosition);
             message += String.format("On %s there was %s, who is moved back to %s. ", newPosition, playerInPosition.get().getName(), startPosition);
         }
 
-        if(isGoose(currentPlayer.getPosition())) {
+        if (isGoose(currentPlayer.getPosition())) {
             startPosition = currentPlayer.getPosition();
             newPosition = currentPlayer.getPosition() + firstThrow + secondThrow;
             currentPlayer.setPosition(newPosition);
-            message = message.substring(0, message.length()-2);
+            message = message.substring(0, message.length() - 2);
             message += String.format(", goose. %s moves from %s to %s. ", currentPlayer.getName(), cellName(startPosition), cellName(newPosition));
         }
-        if(currentPlayer.getPosition()> 63) {
+        if (currentPlayer.getPosition() > 63) {
             currentPlayer.setPosition(63 - (currentPlayer.getPosition() - 63));
             message += String.format("%s bounced! %s goes back to %s", currentPlayer.getName(), currentPlayer.getName(), currentPlayer.getPosition());
-        }
-        else if (currentPlayer.getPosition() == 6) {
+        } else if (currentPlayer.getPosition() == 6) {
             currentPlayer.setPosition(currentPlayer.getPosition() + 6);
             message += String.format("%s jumps to %s", currentPlayer.getName(), currentPlayer.getPosition());
         }
@@ -152,11 +151,11 @@ public class App {
     }
 
     private boolean isGoose(int position) {
-        return Arrays.asList(5,14,23,9,18,27).contains(position);
+        return Arrays.asList(5, 14, 23, 9, 18, 27).contains(position);
     }
 
     private String printRoll(int firstThrow, int secondThrow) {
-        return "[" +firstThrow + ", " + secondThrow + "]";
+        return "[" + firstThrow + ", " + secondThrow + "]";
     }
 
     private String cellName(int position) {
