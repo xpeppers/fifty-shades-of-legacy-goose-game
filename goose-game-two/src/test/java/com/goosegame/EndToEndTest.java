@@ -29,14 +29,10 @@ class EndToEndTest {
 
     @Test
     public void maxFourPlayerAreAllowed() {
-        with().body("{ \"name\": \"Paolo1\", \"nickname\": \"gooser1\"}").
-                when().request("POST", "/players").then().statusCode(201);
-        with().body("{ \"name\": \"Paolo2\", \"nickname\": \"gooser2\"}").
-                when().request("POST", "/players").then().statusCode(201);
-        with().body("{ \"name\": \"Paolo3\", \"nickname\": \"gooser3\"}").
-                when().request("POST", "/players").then().statusCode(201);
-        with().body("{ \"name\": \"Paolo4\", \"nickname\": \"gooser4\"}").
-                when().request("POST", "/players").then().statusCode(201);
+        insertNewPlayer("Paolo1","gooser1");
+        insertNewPlayer("Paolo2","gooser2");
+        insertNewPlayer("Paolo3","gooser3");
+        insertNewPlayer("Paolo4","gooser4");
 
         with().body("{ \"name\": \"Paolo5\", \"nickname\": \"gooser5\"}").
                 when().request("POST", "/players").then().statusCode(400)
@@ -44,10 +40,16 @@ class EndToEndTest {
                     .body("error", equalTo("too many players already: Paolo1, Paolo2, Paolo3, Paolo4"));
     }
 
+    private void insertNewPlayer(String nome, String nickname) {
+        with().body("{ \"name\": \""+nome+"\", \"nickname\": \""+nickname+"\"}").
+                when().request("POST", "/players")
+                .then().statusCode(201);;
+    }
+
     @Test
     public void should_dont_allow_two_players_with_some_nickname() {
-        with().body("{ \"name\": \"Paolo1\", \"nickname\": \"gooser1\"}").
-                when().request("POST", "/players").then().statusCode(201);
+        insertNewPlayer("Paolo1","gooser1");
+
         with().body("{ \"name\": \"Paolo1\", \"nickname\": \"gooser1\"}").
                 when().request("POST", "/players").then()
                 .statusCode(400).assertThat()
